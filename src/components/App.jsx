@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ContactForm } from './ContactForm/ContactForm';
 import { Filter } from './Filter/Filter';
 import { ContactList } from './ContactList/ContactList';
@@ -8,80 +8,67 @@ import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { FaUserFriends, FaPhoneAlt } from 'react-icons/fa';
 
 const LS_KEY = 'contacts';
-export class App extends Component {
-  state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
-    filter: '',
-  };
+export const App = () => {
+  const [contacts, setContacts] = useState(() => {
+    return (
+      JSON.parse(localStorage.getItem(LS_KEY)) ?? [
+        { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+        { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+        { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+        { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
+      ]
+    );
+  });
+  const [filter, setFilter] = useState('');
 
-  componentDidMount() {
-    const savedContacts = JSON.parse(localStorage.getItem(LS_KEY));
-    if (savedContacts) {
-      this.setState({ contacts: savedContacts });
-    }
-  }
+  useEffect(() => {
+    localStorage.setItem(LS_KEY, JSON.stringify(contacts));
+  }, [contacts]);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem(LS_KEY, JSON.stringify(this.state.contacts));
-    }
-  }
-
-  addContact = contact => {
+  const addContact = contact => {
     contact.id = nanoid();
 
-    const names = this.state.contacts.map(item => item.name);
+    const names = contacts.map(item => item.name);
     if (names.includes(contact.name)) {
       return Notify.warning(`${contact.name} is already in contacts`, {
         position: 'center-top',
       });
     }
-    this.setState(({ contacts }) => ({
-      contacts: [...contacts, contact],
-    }));
+    setContacts([...contacts, contact]);
   };
 
-  deleteContact = contactId => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
-    }));
+  const deleteContact = contactId => {
+    setContacts(prevState => {
+      return prevState.filter(contact => contact.id !== contactId);
+    });
   };
 
-  onFilter = evt => {
-    this.setState({ filter: evt.currentTarget.value });
-    this.filterContacts();
+  const onFilter = evt => {
+    setFilter(evt.currentTarget.value);
+    filterContacts();
   };
-  Title;
-  filterContacts = () => {
-    const { contacts, filter } = this.state;
+
+  const filterContacts = () => {
     const normalizedFilter = filter.toLowerCase();
-
     return contacts.filter(({ name }) =>
       name.toLowerCase().includes(normalizedFilter)
     );
   };
 
-  render() {
-    const filtered = this.filterContacts();
-    return (
-      <Container onClick={evt => {}}>
-        <Title>
-          <FaPhoneAlt />
-          Phonebook
-        </Title>
-        <ContactForm addContact={this.addContact} />
-        <ContactsTitle>
-          <FaUserFriends />
-          Contacts
-        </ContactsTitle>
-        <Filter filter={this.state.filter} onFilter={this.onFilter} />
-        <ContactList filtered={filtered} onDeleteContact={this.deleteContact} />
-      </Container>
-    );
-  }
-}
+  const filtered = filterContacts();
+  return (
+    <Container>
+      <Title>
+        <FaPhoneAlt />
+        Phonebook
+      </Title>
+      <ContactForm addContact={addContact} />
+      <ContactsTitle>
+        <FaUserFriends />
+        Contacts
+      </ContactsTitle>
+      <Filter filter={filter} onFilter={onFilter} />
+      <ContactList filtered={filtered} onDeleteContact={deleteContact} />
+    </Container>
+  );
+};
