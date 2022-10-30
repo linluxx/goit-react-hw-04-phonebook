@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
-import { ContactForm } from './ContactForm/ContactForm';
-import { Filter } from './Filter/Filter';
-import { ContactList } from './ContactList/ContactList';
-import { Container, Title, ContactsTitle } from './App.styled';
 import { nanoid } from 'nanoid';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { FaUserFriends, FaPhoneAlt } from 'react-icons/fa';
+import { ContactForm } from './ContactForm/ContactForm';
+import { Filter } from './Filter/Filter';
+import { ContactList } from './ContactList/ContactList';
+import { LS_KEY } from 'constans/localStorageKey';
+import { localStorageGet, localStorageSet } from 'utils/localStorage';
+import { Container, Title, ContactsTitle } from './App.styled';
 
-const LS_KEY = 'contacts';
 export const App = () => {
   const [contacts, setContacts] = useState(() => {
     return (
-      JSON.parse(localStorage.getItem(LS_KEY)) ?? [
+      localStorageGet(LS_KEY) ?? [
         { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
         { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
         { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
@@ -22,7 +23,7 @@ export const App = () => {
   const [filter, setFilter] = useState('');
 
   useEffect(() => {
-    localStorage.setItem(LS_KEY, JSON.stringify(contacts));
+    localStorageSet(LS_KEY, contacts);
   }, [contacts]);
 
   const addContact = contact => {
